@@ -4,7 +4,7 @@ Easy to use Jar to DLL convertor (not a direct Java to C++ translator)
 # Requirements
 You need to have few pre-installed things to use Jar2DLL:
  - CMake
- - Visual Studio >2019 (because thanks microshit we can't simply install MSVC compiler without VS)
+ - Visual Studio >2019 (Thanks for microshit, we can't simply install MSVC compiler without VS)
  # How to use
  You can convert your JAR into DLL by 1 step:
  
