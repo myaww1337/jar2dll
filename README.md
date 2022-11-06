@@ -1,5 +1,5 @@
 # ⭐ Jar2DLL
-Easy to use Jar to DLL convertor (not a direct Java to C++ translator)
+Easy to use Jar to DLL converter (not a direct Java to C++ translator)
 <br>
 # Requirements
 You need to have few pre-installed things to use Jar2DLL:
