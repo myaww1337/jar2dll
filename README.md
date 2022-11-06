@@ -40,7 +40,7 @@ if(player != null){
     method.invoke(player, "Hello from Jar2DLL");
     isMessageSent = true;
   }
-  Field onGround = player.getClass().getField("z"); // onGround player
+  Field onGround = player.getClass().getField("z"); // onGround field
   onGround.set(player, true);
 }
 ```
