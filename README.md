@@ -1,6 +1,11 @@
 # ⭐ Jar2DLL
 Easy to use Jar to DLL converter (not a direct Java to C++ translator)
 <br>
+# Features
+ - Auto compilation
+ - Fast
+ - Supports all Java versions
+ - Resource support
 # Requirements
 You need to have few pre-installed things to use Jar2DLL:
  - CMake
