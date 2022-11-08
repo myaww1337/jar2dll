@@ -1,10 +1,10 @@
 package me.netrum.jartodll;
 
-public class ClassEntry {
+public class ResourceEntry {
     public final String name;
     public final byte[] bytes;
 
-    public ClassEntry(String name, byte[] bytes) {
+    public ResourceEntry(String name, byte[] bytes) {
         this.name = name;
         this.bytes = bytes;
     }
