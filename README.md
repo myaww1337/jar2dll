@@ -14,7 +14,11 @@ You need to have few pre-installed things to use Jar2DLL:
  # How to use
  You can convert your JAR into DLL by 1 step:
  
- ```java -jar Jar2DLL.jar --input input.jar --output output.dll```
+ ```java -jar Jar2DLL.jar``` (Will open GUI)
+ 
+ or
+ 
+ ```java -jar Jar2DLL.jar --input input.jar --output output.dll``` (Will start process)
  
  There also few parameters:
   - --cmake - Accepts full CMake path (C:/Program Files/CMake)
