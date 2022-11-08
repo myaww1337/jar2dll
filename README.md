@@ -19,6 +19,7 @@ You need to have few pre-installed things to use Jar2DLL:
  There also few parameters:
   - --cmake - Accepts full CMake path (C:/Program Files/CMake)
   - --entryPoint - Accepts name of main class with main method (Yes, your DLL will start from `main(String[])` method)
+  - --saveSource - Jar2DLL will save auto-generated C++ code
   
 # Explanation
 Well, Jar2DLL is **NOT** Java to C++ translator. It works more easily.
