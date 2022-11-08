@@ -1,4 +1,4 @@
-package me.netrum.jartodll;
+package me.netrum.jartodll.base;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

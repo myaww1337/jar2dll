@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane fx:controller="me.netrum.jartodll.GUIController" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="329.0" prefWidth="270.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Button layoutX="5.0" layoutY="305.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="270.0" text="Start" fx:id="process" onAction="#onClick" />
+      <TextField layoutX="14.0" layoutY="32.0" fx:id="input" prefWidth="252" onKeyPressed="#onKeyPressed" />
+      <Label layoutX="14.0" layoutY="11.0" text="Input file:" />
+      <TextField layoutX="14.0" layoutY="92.0" prefWidth="252" fx:id="output" />
+      <Label layoutX="14.0" layoutY="71.0" text="Output file:" />
+      <ProgressBar layoutX="5.0" layoutY="276.0" prefHeight="18.0" prefWidth="270.0" progress="0.0" fx:id="progressBar" />
+      <TextField layoutX="14.0" layoutY="152.0" text="C:/Program Files/CMake" prefWidth="252" fx:id="cmakePath" />
+      <Label layoutX="14.0" layoutY="131.0" text="CMake path:" />
+      <CheckBox layoutX="15.0" layoutY="248.0" mnemonicParsing="false" text="Save C++ Source file" fx:id="saveSource" />
+      <TextField layoutX="14.0" layoutY="212.0" prefWidth="252" fx:id="mainClass" />
+      <Label layoutX="14.0" layoutY="191.0" text="Entry point:" />
+   </children>
+</AnchorPane>

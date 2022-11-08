@@ -1,4 +1,4 @@
-package me.netrum.jartodll;
+package me.netrum.jartodll.base;
 
 public class ResourceEntry {
     public final String name;

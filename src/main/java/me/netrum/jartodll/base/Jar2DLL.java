@@ -1,5 +1,7 @@
-package me.netrum.jartodll;
+package me.netrum.jartodll.base;
 
+import javafx.scene.control.ProgressBar;
+import me.netrum.jartodll.GUIController;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,13 +21,16 @@ import java.util.jar.Manifest;
 
 public class Jar2DLL {
     public static final Logger logger = LogManager.getLogger();
+    public static ProgressBar progressBar;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void doThing(String[] args) throws Exception {
         String input = parseVariable(args, "input", true),
                 output = parseVariable(args, "output", true),
-                customEntryPoint = parseVariable(args, "entryPoint", false), cmakePath = parseVariable(args, "cmake", false);
+                entryPoint = parseVariable(args, "entryPoint", false), cmakePath = parseVariable(args, "cmake", false),
+        saveSource = parseVariable(args, "saveSource", false);
 
         if(cmakePath == null) cmakePath = "C:/Program Files/CMake/";
+        if(entryPoint == null) entryPoint = getEntryPoint(Paths.get(input));
 
         Path path = Paths.get("jar2dll-temp");
 
@@ -37,16 +42,16 @@ public class Jar2DLL {
         Enumeration<JarEntry> entries = jarFile.entries();
 
         List<ResourceEntry> classes = new ArrayList<>(), resources = new ArrayList<>();
-        Manifest manifest = null;
 
-        byte[] bootstrapBytes = getBytes(Jar2DLL.class.getResourceAsStream("/me/netrum/jartodll/Jar2DLLClassLoader.class"));
-        classes.add(new ResourceEntry("me.netrum.jartodll.Jar2DLLClassLoader", bootstrapBytes));
+        byte[] bootstrapBytes = getBytes(Jar2DLL.class.getResourceAsStream("/me/netrum/jartodll/base/Jar2DLLClassLoader.class"));
+        classes.add(new ResourceEntry("me.netrum.jartodll.base.Jar2DLLClassLoader", bootstrapBytes));
 
-        byte[] bootstrapBytes_1 = getBytes(Jar2DLL.class.getResourceAsStream("/me/netrum/jartodll/Jar2DLLClassLoader$1.class"));
-        classes.add(new ResourceEntry("me.netrum.jartodll.Jar2DLLClassLoader$1", bootstrapBytes_1));
+        byte[] bootstrapBytes_1 = getBytes(Jar2DLL.class.getResourceAsStream("/me/netrum/jartodll/base/Jar2DLLClassLoader$1.class"));
+        classes.add(new ResourceEntry("me.netrum.jartodll.base.Jar2DLLClassLoader$1", bootstrapBytes_1));
 
-        byte[] bootstrapBytes_2 = getBytes(Jar2DLL.class.getResourceAsStream("/me/netrum/jartodll/Jar2DLLClassLoader$1$1.class"));
-        classes.add(new ResourceEntry("me.netrum.jartodll.Jar2DLLClassLoader$1$1", bootstrapBytes_2));
+        byte[] bootstrapBytes_2 = getBytes(Jar2DLL.class.getResourceAsStream("/me/netrum/jartodll/base/Jar2DLLClassLoader$1$1.class"));
+        classes.add(new ResourceEntry("me.netrum.jartodll.base.Jar2DLLClassLoader$1$1", bootstrapBytes_2));
+        progressBar.setProgress(0.1);
 
         while(entries.hasMoreElements()){
             JarEntry entry = entries.nextElement();
@@ -58,20 +63,19 @@ public class Jar2DLL {
             if(bytes.length > 4 && bytes[0] == (byte)0xCA && bytes[1] == (byte)0xFE && bytes[2] == (byte)0xBA && bytes[3] == (byte)0xBE){
                 logger.info("Loading '{}' class...", entry.getName().replaceAll("/", "\\.").replace(".class", ""));
                 classes.add(new ResourceEntry(entry.getName().replaceAll("/", "\\.").replace(".class", ""), bytes));
-            }else if(entry.getName().equals("META-INF/MANIFEST.MF")){
-                manifest = new Manifest(jarFile.getInputStream(entry));
-            }else{
+            }else if(!entry.getName().startsWith("META-INF")){
                 if(!entry.isDirectory()) resources.add(new ResourceEntry(entry.getName(), bytes));
             }
         }
+        progressBar.setProgress(0.4);
 
         if(classes.size() < 2){
             logger.fatal("There is no Java classes...");
-            System.exit(-1);
+            throw new Exception();
         }
-        if(manifest == null && customEntryPoint == null){
+        if(entryPoint == null){
             logger.fatal("Unable to find entry point...");
-            System.exit(-1);
+            throw new Exception();
         }
 
         logger.info("Creating C++ code...");
@@ -152,13 +156,13 @@ public class Jar2DLL {
         cppOutput.append("          }\n\n");
 
         // system classes begins here
-        cppOutput.append("          jclass loaderClass = env->DefineClass(\"me/netrum/jartodll/Jar2DLLClassLoader\", NULL, me_netrum_jartodll_Jar2DLLClassLoader, ").append(bootstrapBytes.length)
+        cppOutput.append("          jclass loaderClass = env->DefineClass(\"me/netrum/jartodll/base/Jar2DLLClassLoader\", NULL, me_netrum_jartodll_base_Jar2DLLClassLoader, ").append(bootstrapBytes.length)
                 .append("); // System class\n");
 
-        cppOutput.append("          env->DefineClass(\"me/netrum/jartodll/Jar2DLLClassLoader$1\", NULL, me_netrum_jartodll_Jar2DLLClassLoader$1, ").append(bootstrapBytes_1.length)
+        cppOutput.append("          env->DefineClass(\"me/netrum/jartodll/base/Jar2DLLClassLoader$1\", NULL, me_netrum_jartodll_base_Jar2DLLClassLoader$1, ").append(bootstrapBytes_1.length)
                 .append("); // System class\n");
 
-        cppOutput.append("          env->DefineClass(\"me/netrum/jartodll/Jar2DLLClassLoader$1$1\", NULL, me_netrum_jartodll_Jar2DLLClassLoader$1$1, ").append(bootstrapBytes_2.length)
+        cppOutput.append("          env->DefineClass(\"me/netrum/jartodll/base/Jar2DLLClassLoader$1$1\", NULL, me_netrum_jartodll_base_Jar2DLLClassLoader$1$1, ").append(bootstrapBytes_2.length)
                 .append("); // System class\n");
 
         cppOutput.append("          jmethodID loaderConstructor = env->GetMethodID(loaderClass, \"<init>\", \"()V\");\n");
@@ -196,11 +200,6 @@ public class Jar2DLL {
                     bufferName, resource.name));
         }
 
-        String mainClass;
-        if(customEntryPoint != null){
-            mainClass = customEntryPoint;
-        }else mainClass = manifest.getMainAttributes().getValue("Main-Class");
-
         /*
             That's why I used own class loader.
             Here we call findClass method from our classloader instance.
@@ -209,13 +208,13 @@ public class Jar2DLL {
          */
 
         cppOutput.append(String.format("          jobject klass = env->CallObjectMethod(instance, env->GetMethodID(loaderClass, \"findClass\", \"(Ljava/lang/String;)Ljava/lang/Class;\"), env->NewStringUTF(\"%s\"));\n",
-                mainClass));
-        cppOutput.append(String.format("          env->CallVoidMethod(instance, env->GetMethodID(loaderClass, \"callEntryPoint\", \"(Ljava/lang/Class;)V\"), klass); // Main class from %s\n",
-                customEntryPoint == null ? "manifest file" : "custom entry point"));
+                entryPoint));
+        cppOutput.append("          env->CallVoidMethod(instance, env->GetMethodID(loaderClass, \"callEntryPoint\", \"(Ljava/lang/Class;)V\"), klass);\n");
 
         cppOutput.append("      }\n");
         cppOutput.append("  }\n");
         cppOutput.append("}");
+        progressBar.setProgress(0.5);
 
         Files.write(path.resolve(Paths.get("source.cpp")), cppOutput.toString().getBytes());
         Files.write(path.resolve(Paths.get("CMakeLists.txt")), getBytes(Jar2DLL.class.getResourceAsStream("/CMakeLists.txt")));
@@ -223,10 +222,11 @@ public class Jar2DLL {
         Files.write(path.resolve(Paths.get("jni_md.h")), getBytes(Jar2DLL.class.getResourceAsStream("/jni_md.h")));
         Files.write(path.resolve(Paths.get("pch.cpp")), getBytes(Jar2DLL.class.getResourceAsStream("/pch.cpp")));
         Files.write(path.resolve(Paths.get("pch.h")), getBytes(Jar2DLL.class.getResourceAsStream("/pch.h")));
+        progressBar.setProgress(0.6);
 
         if(!Files.exists(Paths.get(cmakePath))){
             logger.fatal("Specify CMake path with '--cmake' parameter");
-            System.exit(-1);
+            throw new Exception();
         }
 
         Path cmake = Paths.get(cmakePath).resolve("bin/cmake.exe");
@@ -237,6 +237,7 @@ public class Jar2DLL {
                 "CMakeLists.txt"
         }, null, path.toFile().getAbsoluteFile());
         process.waitFor();
+        progressBar.setProgress(0.8);
 
         process = Runtime.getRuntime().exec(new String[]{
                 cmake.toFile().getAbsolutePath(),
@@ -248,15 +249,24 @@ public class Jar2DLL {
         while((cb = inputStream.read()) != -1){
             System.out.printf("%s", (char)cb);
         }
+        progressBar.setProgress(0.9);
 
         logger.info("Cleaning up...");
         byte[] dllBytes = getBytes(Files.newInputStream(path.resolve(Paths.get("build/lib/jartodll.dll"))));
         recursiveDelete(path);
         Files.write(path.resolve(output), dllBytes);
+
+        if(Boolean.parseBoolean(saveSource)){
+            Files.write(path.resolve(String.format("%s_source.cpp", new File(input).getName().replace(".jar", ""))), cppOutput.toString().getBytes());
+            logger.info("Source file was saved to '{}'",
+                    path.resolve(String.format("%s_source.cpp", new File(input).getName().replace(".jar", ""))));
+        }
+
         logger.info("Output path: {}", path.resolve(output).toFile().getAbsolutePath());
+        progressBar.setProgress(1);
     }
 
-    private static String parseVariable(String[] args, String variableName, boolean required){
+    private static String parseVariable(String[] args, String variableName, boolean required) throws Exception {
         for(int i = 0; i < args.length; ++i){
             if(args[i].equals(String.format("--%s", variableName))){
                 return args[i + 1];
@@ -265,7 +275,7 @@ public class Jar2DLL {
 
         if(required) {
             logger.fatal("'{}' parameter is required", variableName);
-            System.exit(-1);
+            throw new Exception();
         }
 
         return null;
@@ -288,5 +298,21 @@ public class Jar2DLL {
 
             file.delete();
         }
+    }
+
+    public static String getEntryPoint(Path path) throws IOException {
+        JarFile jarFile = new JarFile(path.toFile());
+        Enumeration<JarEntry> entries = jarFile.entries();
+
+        while(entries.hasMoreElements()){
+            JarEntry entry = entries.nextElement();
+            if(entry.getName().equals("META-INF/MANIFEST.MF")){
+                Manifest manifest = new Manifest(jarFile.getInputStream(entry));
+
+                return manifest.getMainAttributes().getValue("Main-Class");
+            }
+        }
+
+        return null;
     }
 }
