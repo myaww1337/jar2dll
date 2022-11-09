@@ -116,7 +116,7 @@ public class Jar2DLL {
 
         // resources
         for(ResourceEntry resourceEntry : resources){
-            cppOutput.append("const jbyte ").append(resourceEntry.name.replaceAll("/", "_")).append("[] = {\n\t");
+            cppOutput.append("const jbyte ").append(getResourceName(resourceEntry.name)).append("[] = {\n\t");
             int split = 0;
             StringBuilder content = new StringBuilder();
 
@@ -187,7 +187,7 @@ public class Jar2DLL {
         }
 
         for(ResourceEntry resource : resources){
-            String bufferName = resource.name.replaceAll("/", "_") + "_buf";
+            String bufferName = getResourceName(resource.name).replaceAll("/", "_") + "_buf";
             String arrayName = bufferName.replaceAll("_buf", "");
 
 
@@ -214,6 +214,12 @@ public class Jar2DLL {
         cppOutput.append("      }\n");
         cppOutput.append("  }\n");
         cppOutput.append("}");
+        if(Boolean.parseBoolean(saveSource)){
+            Files.write(path.resolve(String.format("%s_source.cpp", new File(input).getName().replace(".jar", ""))), cppOutput.toString().getBytes());
+            logger.info("Source file was saved to '{}'",
+                    path.resolve(String.format("%s_source.cpp", new File(input).getName().replace(".jar", ""))));
+        }
+
         progressBar.setProgress(0.5);
 
         Files.write(path.resolve(Paths.get("source.cpp")), cppOutput.toString().getBytes());
@@ -246,21 +252,14 @@ public class Jar2DLL {
         }, null, path.toFile().getAbsoluteFile());
         InputStream inputStream = process.getInputStream();
         int cb;
-        while((cb = inputStream.read()) != -1){
-            System.out.printf("%s", (char)cb);
-        }
+        while((cb = inputStream.read()) != -1){}
+        
         progressBar.setProgress(0.9);
 
         logger.info("Cleaning up...");
         byte[] dllBytes = getBytes(Files.newInputStream(path.resolve(Paths.get("build/lib/jartodll.dll"))));
         recursiveDelete(path);
         Files.write(path.resolve(output), dllBytes);
-
-        if(Boolean.parseBoolean(saveSource)){
-            Files.write(path.resolve(String.format("%s_source.cpp", new File(input).getName().replace(".jar", ""))), cppOutput.toString().getBytes());
-            logger.info("Source file was saved to '{}'",
-                    path.resolve(String.format("%s_source.cpp", new File(input).getName().replace(".jar", ""))));
-        }
 
         logger.info("Output path: {}", path.resolve(output).toFile().getAbsolutePath());
         progressBar.setProgress(1);
@@ -314,5 +313,16 @@ public class Jar2DLL {
         }
 
         return null;
+    }
+
+    private static String getResourceName(String originalName){
+        StringBuilder out = new StringBuilder();
+        for(char ch : originalName.toCharArray()){
+            if(!Character.isLetter(ch) && !Character.isDigit(ch)) ch = '_';
+
+            out.append(ch);
+        }
+
+        return out.toString();
     }
 }
