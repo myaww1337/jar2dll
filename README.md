@@ -1,3 +1,5 @@
+# This project was closed!
+
 # ⭐ Jar2DLL
 Easy to use Jar to DLL converter (not a direct Java to C++ translator)
 <br>
